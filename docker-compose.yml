@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "3000:3000"
+      - "9999:9999"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -23,6 +23,12 @@ services:
         condition: service_healthy
     networks:
       - rinha
+      - payment-processor
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "120MB"
 
   worker:
     build:
@@ -39,6 +45,8 @@ services:
       - DATABASE_USER=rinha
       - DATABASE_PASSWORD=rinha
       - DATABASE_NAME=rinha
+      - PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
+      - PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
     depends_on:
       redis:
         condition: service_healthy
@@ -46,6 +54,12 @@ services:
         condition: service_healthy
     networks:
       - rinha
+      - payment-processor
+    deploy:
+      resources:
+        limits:
+          cpus: "0.6"
+          memory: "150MB"
 
   redis:
     image: redis:7-alpine
@@ -61,18 +75,11 @@ services:
       retries: 5
     networks:
       - rinha
-
-  redis-insight:
-    image: redis/redisinsight:2.60
-    ports:
-      - "5540:5540"
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - redisinsight_data:/data
-    networks:
-      - rinha
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "30MB"
 
   database:
     image: postgres:17-alpine
@@ -93,24 +100,30 @@ services:
       retries: 5
     networks:
       - rinha
-
-  pgadmin:
-    image: dpage/pgadmin4:9.4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "rinha@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: "rinha"
-    ports:
-      - "8080:80"
-    depends_on:
-      database:
-        condition: service_healthy
-    networks:
-      - rinha
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: "50MB"
+  # pgadmin:
+  #   image: dpage/pgadmin4:9.4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: "rinha@gmail.com"
+  #     PGADMIN_DEFAULT_PASSWORD: "rinha"
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #   networks:
+  #     - rinha
 
 volumes:
   pg_data:
   redis_data:
-  redisinsight_data:
 
 networks:
   rinha:
+    driver: bridge
+  payment-processor:
+    external: true

@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { Queue } from 'bullmq'
-import { doesPaymentExists, getGroupedPayments } from '../db/query/payments'
+import { getGroupedPayments } from '../db/queries/payments'
 
 const redisHost = process.env.REDIS_HOST!
 const redisPort = Number(process.env.REDIS_PORT!)
@@ -18,19 +18,12 @@ const app = new Elysia()
 app
   .post(
     '/payments',
-    async ({ body, set }) => {
-      const { correlationId, amount, processor } = body
-
-      if (await doesPaymentExists(correlationId)) {
-        set.status = 'Conflict'
-
-        return { message: 'Payment already exists' }
-      }
+    async ({ body }) => {
+      const { correlationId, amount } = body
 
       await payments_queue.add('payments', {
         correlationId,
         amount,
-        processor,
       })
 
       return { message: 'Payment added to the queue' }
@@ -39,21 +32,13 @@ app
       body: t.Object({
         correlationId: t.String({ format: 'uuid' }),
         amount: t.Number(),
-        processor: t.Enum({ default: 'default', fallback: 'fallback' }),
       }),
     }
   )
-  .get('/payments-summary', async () => {
-    const groupedPayments = await getGroupedPayments()
-    const formattedGroupedPayments = groupedPayments.reduce((prev, curr) => {
-      prev[curr.processor] = {
-        totalRequests: Number(curr.totalRequest),
-        totalAmount: Number(curr.totalAmount),
-      }
-      return prev
-    }, {} as Record<string, { totalRequests: number; totalAmount: number }>)
+  .get('/payments-summary', async ({ query }) => {
+    const { from, to } = query
 
-    return formattedGroupedPayments
+    return await getGroupedPayments(from!, to!)
   })
 
-app.listen(3000)
+app.listen(9999)

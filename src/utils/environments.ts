@@ -5,3 +5,5 @@ export const databasePort = Number(process.env.DATABASE_PORT!)
 export const databaseUser = process.env.DATABASE_USER!
 export const databasePassword = process.env.DATABASE_PASSWORD!
 export const databaseName = process.env.DATABASE_NAME!
+export const processorDefaultUrl = process.env.PROCESSOR_DEFAULT_URL!
+export const processorFallbackUrl = process.env.PROCESSOR_FALLBACK_URL!
