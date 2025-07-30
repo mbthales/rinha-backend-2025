@@ -4,8 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "server-dev": "bun --watch ./src/server/index.ts",
-    "worker-dev": "bun --watch ./src/worker/index.ts"
+    "dev": "bun --watch ./src/index.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

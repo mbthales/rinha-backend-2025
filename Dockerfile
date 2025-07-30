@@ -5,3 +5,5 @@ WORKDIR /app
 COPY package.json bun.lock ./
 
 RUN bun install
+
+CMD [ "bun", "dev" ]

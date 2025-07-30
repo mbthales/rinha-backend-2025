@@ -1,6 +1,9 @@
 import { Elysia, t } from 'elysia'
 import { Queue } from 'bullmq'
-import { getGroupedPayments } from '../db/queries/payments'
+import { getGroupedPayments } from './db/queries/payments'
+import { startWorker } from './worker'
+
+startWorker()
 
 const redisHost = process.env.REDIS_HOST!
 const redisPort = Number(process.env.REDIS_PORT!)
