@@ -6,3 +6,5 @@ CREATE TABLE payments (
   processor PROCESSOR NOT NULL,
   requestedAt TIMESTAMP NOT NULL
 );
+
+CREATE INDEX idx_payments_requestedat ON payments(requestedAt);

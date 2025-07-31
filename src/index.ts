@@ -1,9 +1,11 @@
 import { Elysia, t } from 'elysia'
 import { Queue } from 'bullmq'
 import { getGroupedPayments } from './db/queries/payments'
-import { startWorker } from './worker'
+import { paymentWorker } from './paymentWorker'
+import { processorsHealthMonitor } from './healthMonitor'
 
-startWorker()
+paymentWorker()
+processorsHealthMonitor()
 
 const redisHost = process.env.REDIS_HOST!
 const redisPort = Number(process.env.REDIS_PORT!)
@@ -28,8 +30,6 @@ app
         correlationId,
         amount,
       })
-
-      return { message: 'Payment added to the queue' }
     },
     {
       body: t.Object({

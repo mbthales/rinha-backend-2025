@@ -28,9 +28,8 @@ export const createPayment = async (
       'INSERT INTO payments (id, amount, processor, requestedAt) VALUES ($1, $2, $3, $4)',
       [id, amount, processor, timestamp]
     )
-  } catch (err) {
-    console.error(err)
-    throw new Error('Payment error')
+  } catch (_err) {
+    console.error('Error adding payment')
   }
 }
 
@@ -57,8 +56,7 @@ export const getGroupedPayments = async (from: string, to: string) => {
     )
 
     return result.rows[0].payment_summary
-  } catch (err) {
-    console.error(err)
-    throw new Error('Error fetching grouped payments from DB')
+  } catch (_err) {
+    console.error('Error getting payment')
   }
 }
