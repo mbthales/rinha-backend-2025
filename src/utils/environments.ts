@@ -1,9 +1,9 @@
 export const redisHost = process.env.REDIS_HOST!
 export const redisPort = Number(process.env.REDIS_PORT!)
-export const databaseHost = process.env.DATABASE_HOST!
-export const databasePort = Number(process.env.DATABASE_PORT!)
-export const databaseUser = process.env.DATABASE_USER!
-export const databasePassword = process.env.DATABASE_PASSWORD!
-export const databaseName = process.env.DATABASE_NAME!
 export const processorDefaultUrl = process.env.PROCESSOR_DEFAULT_URL!
 export const processorFallbackUrl = process.env.PROCESSOR_FALLBACK_URL!
+export const redisPaymentsQueueName = process.env.REDIS_PAYMENTS_QUEUE_NAME!
+export const redisPaymentsQueueJob = process.env.REDIS_PAYMENTS_QUEUE_JOB!
+export const redisProcessorsStatusKey = process.env.REDIS_PROCESSORS_STATUS_KEY!
+export const redisPaymentsDefaultKey = process.env.REDIS_PAYMENTS_DEFAULT_KEY!
+export const redisPaymentsFallbackKey = process.env.REDIS_PAYMENTS_FALLBACK_KEY!

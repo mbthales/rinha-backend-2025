@@ -1,17 +1,9 @@
 import axios from 'axios'
-import IORedis from 'ioredis'
 import {
-  redisHost,
-  redisPort,
   processorDefaultUrl,
   processorFallbackUrl,
-} from './utils/environments'
-
-const connection = new IORedis({
-  host: redisHost,
-  port: redisPort,
-  maxRetriesPerRequest: null,
-})
+} from '../utils/environments'
+import connection from '../redis/connection'
 
 const healthStatusKey = 'payments:health_status'
 

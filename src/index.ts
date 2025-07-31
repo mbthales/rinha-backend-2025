@@ -1,35 +1,19 @@
 import { Elysia, t } from 'elysia'
-import { Queue } from 'bullmq'
-import { getGroupedPayments } from './db/queries/payments'
-import { paymentWorker } from './paymentWorker'
-import { processorsHealthMonitor } from './healthMonitor'
+import { getPaymentsStats, queuePayment } from './redis/payments'
+
+import { paymentWorker } from './worker/payments'
+import { processorsHealthMonitor } from './services/processorsHealth'
 
 paymentWorker()
 processorsHealthMonitor()
 
-const redisHost = process.env.REDIS_HOST!
-const redisPort = Number(process.env.REDIS_PORT!)
-
-const payments_queue = new Queue('payments_queue', {
-  connection: {
-    host: redisHost,
-    port: redisPort,
-    maxRetriesPerRequest: null,
-  },
-})
-
-const app = new Elysia()
-
-app
+new Elysia()
   .post(
     '/payments',
     async ({ body }) => {
       const { correlationId, amount } = body
 
-      await payments_queue.add('payments', {
-        correlationId,
-        amount,
-      })
+      await queuePayment(correlationId, amount)
     },
     {
       body: t.Object({
@@ -41,7 +25,6 @@ app
   .get('/payments-summary', async ({ query }) => {
     const { from, to } = query
 
-    return await getGroupedPayments(from!, to!)
+    return await getPaymentsStats(from!, to!)
   })
-
-app.listen(9999)
+  .listen(9999)
