@@ -2,5 +2,17 @@
   "trailingComma": "es5",
   "tabWidth": 2,
   "semi": false,
-  "singleQuote": true
+  "singleQuote": true,
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports"
+  ],
+  "importOrder": [
+    "^dotenv/config$",
+    "",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "<TYPES>",
+    "",
+    "^[@]"
+  ]
 }

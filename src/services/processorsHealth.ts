@@ -1,11 +1,11 @@
 import axios from 'axios'
+
+import connection from '@redis/connection'
 import {
   processorDefaultUrl,
   processorFallbackUrl,
-} from '../utils/environments'
-import connection from '../redis/connection'
-
-const healthStatusKey = 'payments:health_status'
+  redisProcessorsStatusKey,
+} from '@utils/environments'
 
 export const processorsHealthMonitor = () => {
   const checkHealth = async () => {
@@ -25,7 +25,7 @@ export const processorsHealthMonitor = () => {
         fallback: fallbackOk,
       }
 
-      await connection.set(healthStatusKey, JSON.stringify(newStatus))
+      await connection.set(redisProcessorsStatusKey, JSON.stringify(newStatus))
     } catch (_err) {
       console.error('Error checking processors health')
     }

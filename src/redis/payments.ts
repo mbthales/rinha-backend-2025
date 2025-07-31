@@ -1,12 +1,19 @@
 import { Queue } from 'bullmq'
-import connection from './connection'
+
+import type {
+  paymentPayload,
+  processor,
+  processorsStatus,
+} from '@app-types/payments'
+
+import connection from '@redis/connection'
 import {
-  redisPaymentsQueueName,
-  redisPaymentsQueueJob,
-  redisProcessorsStatusKey,
   redisPaymentsDefaultKey,
   redisPaymentsFallbackKey,
-} from '../utils/environments'
+  redisPaymentsQueueJob,
+  redisPaymentsQueueName,
+  redisProcessorsStatusKey,
+} from '@utils/environments'
 
 const payments_queue = new Queue(redisPaymentsQueueName, {
   connection,
@@ -14,8 +21,8 @@ const payments_queue = new Queue(redisPaymentsQueueName, {
 
 export const storePaymentRecord = async (
   timestamp: string,
-  data: { correlationId: string; amount: number },
-  processor: 'default' | 'fallback'
+  data: paymentPayload,
+  processor: processor
 ) => {
   const score = new Date(timestamp).getTime()
   const isDefault = processor === 'default'
@@ -35,19 +42,18 @@ export const getPaymentsStats = async (from: string, to: string) => {
   const fromScore = new Date(from).getTime()
   const toScore = new Date(to).getTime()
 
-  const processors = ['default', 'fallback']
-
-  const result = {
-    default: { totalRequests: 0, totalAmount: 0 },
-    fallback: { totalRequests: 0, totalAmount: 0 },
+  const keys = {
+    default: redisPaymentsDefaultKey,
+    fallback: redisPaymentsFallbackKey,
   }
 
-  for (const processor of processors) {
-    const isDefault = processor === 'default'
-    const key = isDefault ? redisPaymentsDefaultKey : redisPaymentsFallbackKey
-    const values = await connection.zrangebyscore(key, fromScore, toScore)
+  const [defaultValues, fallbackValues] = await Promise.all([
+    connection.zrangebyscore(keys.default, fromScore, toScore),
+    connection.zrangebyscore(keys.fallback, fromScore, toScore),
+  ])
 
-    const parsed = values
+  const parseValues = (values: string[]) =>
+    values
       .map((val) => {
         try {
           return JSON.parse(val)
@@ -55,21 +61,26 @@ export const getPaymentsStats = async (from: string, to: string) => {
           return null
         }
       })
-      .filter(Boolean) as { id: string; amount: number }[]
+      .filter(Boolean) as paymentPayload[]
 
-    result[processor as 'default' | 'fallback'].totalRequests = parsed.length
-    result[processor as 'default' | 'fallback'].totalAmount = parsed.reduce(
-      (acc, curr) => acc + curr.amount,
-      0
-    )
+  const defaultParsed = parseValues(defaultValues)
+  const fallbackParsed = parseValues(fallbackValues)
+
+  return {
+    default: {
+      totalRequests: defaultParsed.length,
+      totalAmount: defaultParsed.reduce((acc, curr) => acc + curr.amount, 0),
+    },
+    fallback: {
+      totalRequests: fallbackParsed.length,
+      totalAmount: fallbackParsed.reduce((acc, curr) => acc + curr.amount, 0),
+    },
   }
-
-  return result
 }
 
 export const getProcessorsStatus = async () => {
   const healthStatus = await connection.get(redisProcessorsStatusKey)
-  const processorsStatus: { default: boolean; fallback: boolean } = healthStatus
+  const processorsStatus: processorsStatus = healthStatus
     ? JSON.parse(healthStatus)
     : {
         default: true,

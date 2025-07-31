@@ -1,5 +1,6 @@
 import IORedis from 'ioredis'
-import { redisHost, redisPort } from '../utils/environments'
+
+import { redisHost, redisPort } from '@utils/environments'
 
 const connection = new IORedis({
   host: redisHost,

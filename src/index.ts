@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia'
-import { getPaymentsStats, queuePayment } from './redis/payments'
 
-import { paymentWorker } from './worker/payments'
-import { processorsHealthMonitor } from './services/processorsHealth'
+import { getPaymentsStats, queuePayment } from '@redis/payments'
+import { processorsHealthMonitor } from '@services/processorsHealth'
+import { paymentWorker } from '@workers/payments'
 
 paymentWorker()
 processorsHealthMonitor()

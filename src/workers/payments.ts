@@ -1,17 +1,17 @@
 import { Worker } from 'bullmq'
-import { processPayments } from '../services/payments'
-import { getProcessorsStatus } from '../redis/payments'
-import connection from '../redis/connection'
-import { redisPaymentsQueueName } from '../utils/environments'
+
+import type { paymentPayload } from '@app-types/payments'
+
+import connection from '@redis/connection'
+import { getProcessorsStatus } from '@redis/payments'
+import { processPayments } from '@services/payments'
+import { redisPaymentsQueueName } from '@utils/environments'
 
 export const paymentWorker = () => {
   new Worker(
     redisPaymentsQueueName,
     async (job) => {
-      const { correlationId, amount } = job.data as {
-        correlationId: string
-        amount: number
-      }
+      const { correlationId, amount } = job.data as paymentPayload
 
       const requestedAt = new Date().toISOString()
       const processorsStatus = await getProcessorsStatus()

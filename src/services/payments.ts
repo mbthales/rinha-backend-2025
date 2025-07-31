@@ -1,15 +1,15 @@
 import axios from 'axios'
-import {
-  processorDefaultUrl,
-  processorFallbackUrl,
-} from '../utils/environments'
-import { storePaymentRecord } from '../redis/payments'
+
+import type { processor } from '@app-types/payments'
+
+import { storePaymentRecord } from '@redis/payments'
+import { processorDefaultUrl, processorFallbackUrl } from '@utils/environments'
 
 export const processPayments = async (
   correlationId: string,
   amount: number,
   requestedAt: string,
-  processor: 'default' | 'fallback'
+  processor: processor
 ) => {
   const processorUrl =
     processor === 'default' ? processorDefaultUrl : processorFallbackUrl
