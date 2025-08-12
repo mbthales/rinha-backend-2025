@@ -30,7 +30,7 @@ export const paymentWorker = () => {
     },
     {
       connection,
-      concurrency: 5,
+      concurrency: 300,
     }
   )
 }
