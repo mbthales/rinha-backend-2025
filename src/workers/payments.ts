@@ -1,11 +1,20 @@
 import { Worker } from 'bullmq'
 
-import type { paymentPayload } from '@app-types/payments'
+import type { paymentPayload, processorsStatus } from '@app-types/payments'
 
 import connection from '@redis/connection'
 import { getProcessorsStatus } from '@redis/payments'
 import { processPayments } from '@services/payments'
 import { redisPaymentsQueueName } from '@utils/environments'
+
+let processorsHealth: {
+  status: processorsStatus | null
+  lastUpdate: number
+} = {
+  status: null,
+  lastUpdate: 0,
+}
+const processorsHealthTTL = 5000
 
 export const paymentWorker = () => {
   new Worker(
@@ -14,14 +23,21 @@ export const paymentWorker = () => {
       const { correlationId, amount } = job.data as paymentPayload
 
       const requestedAt = new Date().toISOString()
-      const processorsStatus = await getProcessorsStatus()
 
-      if (processorsStatus.default) {
+      if (
+        !processorsHealth.status ||
+        Date.now() - processorsHealth.lastUpdate > processorsHealthTTL
+      ) {
+        processorsHealth.status = await getProcessorsStatus()
+        processorsHealth.lastUpdate = Date.now()
+      }
+
+      if (processorsHealth.status?.default) {
         await processPayments(correlationId, amount, requestedAt, 'default')
         return
       }
 
-      if (processorsStatus.fallback) {
+      if (processorsHealth.status?.fallback) {
         await processPayments(correlationId, amount, requestedAt, 'fallback')
         return
       }
@@ -30,7 +46,7 @@ export const paymentWorker = () => {
     },
     {
       connection,
-      concurrency: 300,
+      concurrency: 30,
     }
   )
 }
