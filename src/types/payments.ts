@@ -5,7 +5,12 @@ export type paymentPayload = {
 
 export type processor = 'default' | 'fallback'
 
+export type processorStatusPayload = {
+  failing: boolean
+  minResponseTime: number
+}
+
 export type processorsStatus = {
-  default: boolean
-  fallback: boolean
+  default: processorStatusPayload
+  fallback: processorStatusPayload
 }

@@ -39,42 +39,39 @@ export const queuePayment = async (correlationId: string, amount: number) => {
 }
 
 export const getPaymentsStats = async (from: string, to: string) => {
-  const fromScore = new Date(from).getTime()
-  const toScore = new Date(to).getTime()
+  const fromScore = Date.parse(from)
+  const toScore = Date.parse(to)
 
-  const keys = {
-    default: redisPaymentsDefaultKey,
-    fallback: redisPaymentsFallbackKey,
+  const pipeline = connection
+    .pipeline()
+    .zrangebyscore(redisPaymentsDefaultKey, fromScore, toScore)
+    .zrangebyscore(redisPaymentsFallbackKey, fromScore, toScore)
+
+  const results = await pipeline.exec()
+
+  const defaultValues = results?.[0]?.[1] as string[]
+  const fallbackValues = results?.[1]?.[1] as string[]
+
+  const processValues = (values: string[]) => {
+    let totalRequests = 0
+    let totalAmount = 0
+
+    for (const val of values) {
+      const parsed = JSON.parse(val) as paymentPayload
+
+      totalRequests++
+      totalAmount += parsed.amount
+    }
+
+    return { totalRequests, totalAmount }
   }
 
-  const [defaultValues, fallbackValues] = await Promise.all([
-    connection.zrangebyscore(keys.default, fromScore, toScore),
-    connection.zrangebyscore(keys.fallback, fromScore, toScore),
-  ])
-
-  const parseValues = (values: string[]) =>
-    values
-      .map((val) => {
-        try {
-          return JSON.parse(val)
-        } catch {
-          return null
-        }
-      })
-      .filter(Boolean) as paymentPayload[]
-
-  const defaultParsed = parseValues(defaultValues)
-  const fallbackParsed = parseValues(fallbackValues)
+  const defaultStats = processValues(defaultValues)
+  const fallbackStats = processValues(fallbackValues)
 
   return {
-    default: {
-      totalRequests: defaultParsed.length,
-      totalAmount: defaultParsed.reduce((acc, curr) => acc + curr.amount, 0),
-    },
-    fallback: {
-      totalRequests: fallbackParsed.length,
-      totalAmount: fallbackParsed.reduce((acc, curr) => acc + curr.amount, 0),
-    },
+    default: defaultStats,
+    fallback: fallbackStats,
   }
 }
 

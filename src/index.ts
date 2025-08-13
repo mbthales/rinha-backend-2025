@@ -14,6 +14,8 @@ new Elysia()
       const { correlationId, amount } = body
 
       await queuePayment(correlationId, amount)
+
+      return 'added to the queue'
     },
     {
       body: t.Object({

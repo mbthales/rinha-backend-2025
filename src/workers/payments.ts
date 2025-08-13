@@ -32,14 +32,27 @@ export const paymentWorker = () => {
         processorsHealth.lastUpdate = Date.now()
       }
 
-      if (processorsHealth.status?.default) {
+      const defaultIsHealthy = !processorsHealth.status?.default?.failing
+      const fallbackIsHealthy = !processorsHealth.status?.fallback?.failing
+
+      if (defaultIsHealthy && !fallbackIsHealthy) {
         await processPayments(correlationId, amount, requestedAt, 'default')
         return
       }
 
-      if (processorsHealth.status?.fallback) {
-        await processPayments(correlationId, amount, requestedAt, 'fallback')
-        return
+      if (!defaultIsHealthy && fallbackIsHealthy) {
+        await processPayments(correlationId, amount, requestedAt, 'default')
+      }
+
+      if (defaultIsHealthy && fallbackIsHealthy) {
+        if (
+          processorsHealth.status?.default?.minResponseTime <
+          processorsHealth.status?.fallback?.minResponseTime
+        ) {
+          await processPayments(correlationId, amount, requestedAt, 'default')
+        } else {
+          await processPayments(correlationId, amount, requestedAt, 'fallback')
+        }
       }
 
       throw new Error('No processors available')

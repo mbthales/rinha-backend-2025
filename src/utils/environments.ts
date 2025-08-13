@@ -2,6 +2,7 @@ export const redisHost = process.env.REDIS_HOST!
 export const redisPort = Number(process.env.REDIS_PORT!)
 export const processorDefaultUrl = process.env.PROCESSOR_DEFAULT_URL!
 export const processorFallbackUrl = process.env.PROCESSOR_FALLBACK_URL!
+export const processorsHealthChecker = process.env.PROCESSORS_HEALTH_CHECKER!
 export const redisPaymentsQueueName = process.env.REDIS_PAYMENTS_QUEUE_NAME!
 export const redisPaymentsQueueJob = process.env.REDIS_PAYMENTS_QUEUE_JOB!
 export const redisProcessorsStatusKey = process.env.REDIS_PROCESSORS_STATUS_KEY!
