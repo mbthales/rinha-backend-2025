@@ -2,12 +2,10 @@ x-services-template:
   api: &api
     build:
       context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
-    volumes:
-      - .:/app
     expose:
       - "3000"
-    # O ambiente é definido como um mapa (chave: valor)
     environment: &api-env
       REDIS_HOST: redis
       REDIS_PORT: 6379
